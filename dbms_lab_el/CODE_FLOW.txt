@@ -1,0 +1,223 @@
+"""
+CODE FLOW: How Psychological Profiles Work in the Simulation
+
+Follow the execution path from API request to Mesa simulation
+"""
+
+print("""
+EXECUTION FLOW
+==============
+
+1. FRONTEND REQUEST
+   ├─ User selects soldier + scenario
+   └─ POST /simulations/ {person_id: 1, scenario_id: 2}
+
+2. BACKEND ENDPOINT (simulation.py)
+   ├─ Fetch person from database
+   │  └─ person = {
+   │       id: 1,
+   │       name: "Pvt. Ryan",
+   │       rank: "Private",
+   │       age: 22,
+   │       gender: "Male",
+   │       service_years: 1
+   │     }
+   │
+   ├─ Fetch scenario from database
+   │  └─ scenario = {
+   │       id: 2,
+   │       scenario_type: "Urban Ambush",
+   │       environment: "High Noise, Crowded"
+   │     }
+   │
+   ├─ Map scenario to intensity
+   │  └─ intensity_map = "High"  (because "High" in environment)
+   │
+   └─ Initialize Mesa Model WITH person object
+      └─ model = PTSDModel(
+           width=10,
+           height=10,
+           soldier_rank="Private",
+           soldier_years=1,
+           scenario_intensity="High",
+           person_obj=person  ← KEY: Pass full person object!
+         )
+
+3. MESA MODEL INITIALIZATION (mesa_model.py)
+   ├─ Create SoldierAgent with person_obj
+   │  └─ self.soldier = SoldierAgent(
+   │       0, self, "Private", 1, person_obj=person
+   │     )
+   │
+   └─ In SoldierAgent.__init__:
+      └─ if person_obj:
+           self.psychological_profile = PsychologicalProfile(
+             person_obj,
+             randomize=True
+           )
+
+4. PSYCHOLOGICAL PROFILE GENERATION (psychological_profile.py)
+   ├─ Extract person attributes
+   │  ├─ self.rank = "Private"
+   │  ├─ self.age = 22
+   │  ├─ self.gender = "Male"
+   │  └─ self.service_years = 1
+   │
+   ├─ Generate trauma_sensitivity
+   │  ├─ base = 0.5
+   │  ├─ age_factor = (22-18)/50 = 0.08
+   │  ├─ gender_factor = 0 (male)
+   │  ├─ sensitivity = 0.5 - (0.08 * 0.3) + 0 = 0.476
+   │  └─ + randomize(-0.15, 0.15) → 0.68
+   │
+   ├─ Generate baseline_anxiety
+   │  ├─ rank = "Private" → 0.2 base
+   │  └─ + randomize(-0.1, 0.1) → 0.25
+   │
+   ├─ Generate emotional_regulation
+   │  ├─ base = 0.3 + (1/20)*0.4 = 0.32
+   │  ├─ age = (22-18)/100 = 0.04
+   │  ├─ regulation = 0.32 + 0.04 = 0.36
+   │  └─ + randomize(-0.15, 0.15) → 0.35
+   │
+   ├─ Generate recovery_rate
+   │  ├─ base = 0.2 + (1/20)*0.4 = 0.22
+   │  ├─ regulation_bonus = 0.35 * 0.2 = 0.07
+   │  ├─ rate = 0.22 + 0.07 = 0.29
+   │  └─ + randomize(-0.1, 0.1) → 0.28
+   │
+   ├─ Generate impulsivity
+   │  ├─ impulsivity = 0.5 - (1/30)*0.3 = 0.49
+   │  ├─ + (1-0.35)*0.2 = 0.38
+   │  └─ + randomize(-0.1, 0.1) → 0.68
+   │
+   ├─ Select coping mechanism
+   │  ├─ High trauma sensitivity (0.68)
+   │  └─ → CopingMechanism.AVOIDANCE (flight)
+   │
+   └─ Calculate personalized thresholds
+      ├─ calm_threshold = 50 * (1 + (1-0.35)*0.4) = 63
+      └─ alert_threshold = 80 * (1 + (1-0.35)*0.3) = 95
+
+5. SOLDIER PROFILE CREATED
+   ┌─────────────────────────────────────┐
+   │ Pvt. Ryan's Psychological Profile   │
+   ├─────────────────────────────────────┤
+   │ trauma_sensitivity: 0.68            │
+   │ baseline_anxiety: 0.25              │
+   │ emotional_regulation: 0.35          │
+   │ recovery_rate: 0.28                 │
+   │ impulsivity: 0.68                   │
+   │ coping_mechanism: AVOIDANCE         │
+   │ calm_threshold: 63                  │
+   │ alert_threshold: 95                 │
+   └─────────────────────────────────────┘
+
+6. SIMULATION LOOP (20 steps)
+   ├─ for i in range(20):
+   │  ├─ model.step()
+   │  │  └─ soldier.step()
+   │  │
+   │  └─ In soldier.step():
+   │     │
+   │     ├─ DETECT: Find triggers within radius 2
+   │     │  └─ triggers = [TriggerAgent, TriggerAgent]
+   │     │
+   │     ├─ CALCULATE STRESS
+   │     │  ├─ base_stress = 2 * 10 = 20
+   │     │  │
+   │     │  ├─ if self.psychological_profile:  ← YES, use it!
+   │     │  │  │
+   │     │  │  ├─ modified = profile.get_modified_stress_increment(20)
+   │     │  │  │  ├─ multiplier = 0.5 + 0.68 = 1.18
+   │     │  │  │  ├─ modified = 20 * 1.18 = 23.6
+   │     │  │  │  ├─ regulation_reduction = 0.35 * 20 * 0.2 = 1.4
+   │     │  │  │  └─ return 23.6 - 1.4 = 22.2
+   │     │  │  │
+   │     │  │  └─ self.stress += 22.2
+   │     │  │
+   │     │  └─ else:
+   │     │     └─ (fallback to old logic)
+   │     │
+   │     ├─ DECAY STRESS (if no triggers)
+   │     │  ├─ recovery = profile.get_recovery_amount()
+   │     │  │  └─ return 2 * (0.5 + 0.28) = 1.56
+   │     │  └─ self.stress -= 1.56
+   │     │
+   │     └─ DETERMINE BEHAVIOR
+   │        ├─ if self.psychological_profile:
+   │        │  │
+   │        │  ├─ thresholds = {
+   │        │  │   'calm': 63,
+   │        │  │   'alert': 95
+   │        │  │ }
+   │        │  │
+   │        │  ├─ if stress > 95:
+   │        │  │  ├─ status = "Panic"
+   │        │  │  ├─ color = "red"
+   │        │  │  ├─ coping = profile.should_fight_or_flight()
+   │        │  │  │  └─ "flight"
+   │        │  │  └─ self.avoid(triggers)  ← RUN AWAY!
+   │        │  │
+   │        │  ├─ elif stress > 63:
+   │        │  │  ├─ status = "Alert"
+   │        │  │  ├─ color = "orange"
+   │        │  │  └─ self.move()  ← Move randomly
+   │        │  │
+   │        │  └─ else:
+   │        │     ├─ status = "Calm"
+   │        │     ├─ color = "green"
+   │        │     └─ self.move()  ← Move randomly
+   │        │
+   │        └─ else: (fallback)
+   │           └─ (old logic with fixed thresholds)
+   │
+   ├─ CAPTURE STATE
+   │  └─ step_data = {
+   │       "step": i,
+   │       "soldier_pos": (x, y),
+   │       "soldier_stress": 22.2,
+   │       "soldier_color": "green",
+   │       "soldier_status": "Calm",
+   │       "triggers": [...]
+   │     }
+   │
+   └─ Repeat 20 times
+
+7. RETURN TO FRONTEND
+   └─ response = {
+        "id": 123,
+        "person_id": 1,
+        "scenario_id": 2,
+        "full_history": [  ← 20 step_data objects
+          {step: 0, stress: 22.2, status: "Calm", ...},
+          {step: 1, stress: 39.1, status: "Alert", ...},
+          {step: 2, stress: 54.3, status: "Alert", ...},
+          {step: 3, stress: 76.5, status: "Alert", ...},
+          {step: 4, stress: 98.7, status: "Panic", ...},
+          ...
+        ]
+      }
+
+8. FRONTEND ANIMATION
+   ├─ Reads full_history
+   ├─ Renders 10x10 grid
+   ├─ Places soldier at each position
+   ├─ Changes color: green → orange → red
+   ├─ Shows stress number increasing
+   └─ Animates over 10 seconds (500ms per step)
+
+
+KEY TAKEAWAY
+============
+
+The psychological profile is generated ONCE at simulation start,
+then used in EVERY step to modify:
+- How much stress the soldier gains
+- How fast stress recovers
+- When they transition between emotional states
+- How they behave when panicking
+
+This creates UNIQUE, REALISTIC behavior for each soldier
+without changing the database schema!
+""")

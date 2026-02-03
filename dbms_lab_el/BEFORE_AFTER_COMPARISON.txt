@@ -1,0 +1,114 @@
+"""
+BEFORE vs AFTER: Psychological Profile System
+
+This file demonstrates the difference between:
+1. OLD: Only service_years affects behavior
+2. NEW: Multiple factors affect behavior
+"""
+
+print("=" * 100)
+print("OLD SYSTEM (Limited)")
+print("=" * 100)
+print("""
+All soldiers with same years of service react IDENTICALLY:
+
+    Pvt. Ryan (1 year)   → resilience = 1     → Takes +19 stress/step
+    Pvt. Jane (1 year)   → resilience = 1     → Takes +19 stress/step
+    Cpl. Alice (5 years) → resilience = 5     → Takes +15 stress/step
+    Cpl. Bob (5 years)   → resilience = 5     → Takes +15 stress/step
+
+Problem: Individual differences ignored!
+- Age? Ignored
+- Gender? Ignored
+- Personality? Ignored
+- Life experience? Ignored (only raw years count)
+- Coping style? Ignored
+""")
+
+print("\n" + "=" * 100)
+print("NEW SYSTEM (Sophisticated)")
+print("=" * 100)
+print("""
+Same soldiers now have UNIQUE profiles based on multiple factors:
+
+    Pvt. Ryan (1 yr, 22yo, M):
+      - Trauma Sensitivity: 0.68 (young, vulnerable)
+      - Emotional Regulation: 0.35 (immature, reactive)
+      - Recovery Rate: 0.28 (poor coping)
+      - Coping: AVOIDANCE (flight response)
+      - Modified Stress: +21.8 per step
+      - Stress Thresholds: 56/86 (triggers easily)
+      
+    Pvt. Jane (1 yr, 22yo, F):
+      - Trauma Sensitivity: 0.78 (female, more vulnerable)
+      - Emotional Regulation: 0.32 (similar to Ryan)
+      - Recovery Rate: 0.25 (slower)
+      - Coping: FREEZING (freeze response)
+      - Modified Stress: +23.6 per step
+      - Stress Thresholds: 58/88 (triggers more easily)
+      
+    Cpl. Alice (5 yrs, 28yo, F):
+      - Trauma Sensitivity: 0.55 (more experienced, less vulnerable)
+      - Emotional Regulation: 0.65 (learned control)
+      - Recovery Rate: 0.48 (better coping)
+      - Coping: SUPPRESSION (self-control)
+      - Modified Stress: +18.3 per step
+      - Stress Thresholds: 52/83 (harder to trigger)
+      
+    Cpl. Bob (5 yrs, 28yo, M):
+      - Trauma Sensitivity: 0.42 (experienced, resilient)
+      - Emotional Regulation: 0.62 (learned control)
+      - Recovery Rate: 0.45 (good coping)
+      - Coping: APPROACH (fight response)
+      - Modified Stress: +16.8 per step
+      - Stress Thresholds: 50/81 (similar to Alice)
+
+Factors NOW considered:
+✓ Age (affects vulnerability and regulation)
+✓ Gender (affects trauma response)
+✓ Service years (affects regulation and coping)
+✓ Personality derived factors (impulsivity, sensitivity)
+✓ Individual coping mechanisms
+✓ Personalized stress thresholds
+""")
+
+print("\n" + "=" * 100)
+print("COMPARISON TABLE")
+print("=" * 100)
+print("""
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│ Factor                  │ OLD SYSTEM        │ NEW SYSTEM       │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│ Service Years           │ ✓ Used           │ ✓ Used           │
+│ Age                     │ ✗ Ignored        │ ✓ Used           │
+│ Gender                  │ ✗ Ignored        │ ✓ Used           │
+│ Trauma Sensitivity      │ ✗ Not modeled    │ ✓ Modeled        │
+│ Emotional Regulation    │ ✗ Not modeled    │ ✓ Modeled        │
+│ Recovery Speed          │ Fixed (-2)       │ ✓ Variable       │
+│ Coping Mechanism        │ Always Avoidance │ ✓ 4 types        │
+│ Stress Thresholds       │ Fixed (50/80)    │ ✓ Personalized   │
+│ Individual Uniqueness   │ ✗ None           │ ✓ Full profile   │
+└─────────────────────────┴──────────────────┴──────────────────┘
+""")
+
+print("\n" + "=" * 100)
+print("KEY INSIGHT")
+print("=" * 100)
+print("""
+The Psychological Profile System answers:
+
+Q: Why does the same soldier respond differently each simulation?
+A: Randomization in profile generation creates variation
+
+Q: Why do soldiers with same rank/years react differently?
+A: Age, gender, and personality differences are now factored in
+
+Q: How does this affect Mesa?
+A: Soldiers use personalized stress calculations, thresholds, and coping strategies
+
+Q: Did we change the database?
+A: NO - Profiles are generated at simulation runtime, not stored
+
+Q: Can this be extended?
+A: YES - Add more factors like previous trauma, therapy, social support, etc.
+""")

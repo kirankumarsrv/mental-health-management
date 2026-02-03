@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+mesa
+pymysql
+python-dotenv
+python-jose[cryptography]
+passlib[argon2]
+python-multipart
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
